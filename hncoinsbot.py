@@ -15,7 +15,8 @@ def get_klines(symbol="BTCUSDT", interval="1m", limit=100):
         'close_time', 'quote_asset_volume', 'trades',
         'taker_buy_base', 'taker_buy_quote', 'ignore'
     ])
-    df['close'] = df['close'].astype(float)
+    df['close'] = pd.to_numeric(df['close'], errors='coerce')
+    df = df.dropna(subset=['close'])
     return df
 
 def analyze(df):
