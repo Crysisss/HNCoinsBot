@@ -15,17 +15,15 @@ def get_klines(symbol="BTCUSDT", interval="1m", limit=100):
         'close_time', 'quote_asset_volume', 'trades',
         'taker_buy_base', 'taker_buy_quote', 'ignore'
     ])
-    # Chuyển tất cả các cột liên quan sang float
+    
     for col in ['open', 'high', 'low', 'close', 'volume']:
         df[col] = pd.to_numeric(df[col], errors='coerce')
+    
     df = df.dropna(subset=['close'])
     return df
 
 def analyze(df):
     df = df.copy()
-    # Đảm bảo mọi thứ là numeric
-    df['close'] = pd.to_numeric(df['close'], errors='coerce')
-    df = df.dropna(subset=['close'])
 
     df['ema_12'] = df['close'].ewm(span=12).mean()
     df['ema_26'] = df['close'].ewm(span=26).mean()
@@ -36,15 +34,17 @@ def analyze(df):
     gain = delta.clip(lower=0)
     loss = -delta.clip(upper=0)
 
-    gain = pd.to_numeric(gain, errors='coerce')
-    loss = pd.to_numeric(loss, errors='coerce')
-
     avg_gain = gain.rolling(window=14).mean()
     avg_loss = loss.rolling(window=14).mean()
     rs = avg_gain / avg_loss
     df['rsi'] = 100 - (100 / (1 + rs))
 
     df = df.dropna(subset=['ema_12', 'ema_26', 'macd', 'signal', 'rsi'])
+    
+    for col in ['close', 'ema_12', 'ema_26', 'macd', 'signal', 'rsi']:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
+    
+    df = df.dropna(subset=['close', 'ema_12', 'ema_26', 'macd', 'signal', 'rsi'])
 
     return df.iloc[-1][['close', 'ema_12', 'ema_26', 'macd', 'signal', 'rsi']]
 
@@ -68,12 +68,12 @@ def run_bot():
             direction = "📉 SHORT" if result['macd'] < result['signal'] else "📈 LONG"
 
             msg = (
-                f"📊 *HNCoinsBot - BTCUSDT*\n"
-                f"Giá: `{result['close']}`\n"
-                f"EMA12: `{result['ema_12']}`\n"
-                f"EMA26: `{result['ema_26']}`\n"
-                f"MACD: `{result['macd']}` | Signal: `{result['signal']}`\n"
-                f"RSI: `{result['rsi']}`\n"
+                f"📊 *HNCoinsBot - BTCUSDT*\\n"
+                f"Giá: `{result['close']}`\\n"
+                f"EMA12: `{result['ema_12']}`\\n"
+                f"EMA26: `{result['ema_26']}`\\n"
+                f"MACD: `{result['macd']}` | Signal: `{result['signal']}`\\n"
+                f"RSI: `{result['rsi']}`\\n"
                 f"Xu hướng: *{direction}*"
             )
 
@@ -86,4 +86,3 @@ def run_bot():
 
 if __name__ == "__main__":
     run_bot()
-
