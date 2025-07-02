@@ -15,11 +15,17 @@ def get_klines(symbol="BTCUSDT", interval="1m", limit=100):
         'close_time', 'quote_asset_volume', 'trades',
         'taker_buy_base', 'taker_buy_quote', 'ignore'
     ])
-    
+
+    # Convert kiểu dữ liệu
     for col in ['open', 'high', 'low', 'close', 'volume']:
         df[col] = pd.to_numeric(df[col], errors='coerce')
-    
+
     df = df.dropna(subset=['close'])
+
+    # ✅ In kiểu dữ liệu để debug
+    print("📌 Dtypes sau khi ép kiểu:")
+    print(df.dtypes)
+
     return df
 
 def analyze(df):
