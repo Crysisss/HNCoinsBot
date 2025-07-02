@@ -20,6 +20,9 @@ def get_klines(symbol="BTCUSDT", interval="1m", limit=100):
     return df
 
 def analyze(df):
+    df['close'] = pd.to_numeric(df['close'], errors='coerce')
+    df = df.dropna(subset=['close'])
+
     df['ema_12'] = df['close'].ewm(span=12).mean()
     df['ema_26'] = df['close'].ewm(span=26).mean()
     df['macd'] = df['ema_12'] - df['ema_26']
@@ -28,12 +31,17 @@ def analyze(df):
     delta = df['close'].diff()
     gain = delta.clip(lower=0)
     loss = -delta.clip(upper=0)
+
+    gain = pd.to_numeric(gain, errors='coerce')
+    loss = pd.to_numeric(loss, errors='coerce')
+
     avg_gain = gain.rolling(window=14).mean()
     avg_loss = loss.rolling(window=14).mean()
     rs = avg_gain / avg_loss
+
     df['rsi'] = 100 - (100 / (1 + rs))
 
-    return df.iloc[-1][['close', 'ema_12', 'ema_26', 'macd', 'signal', 'rsi']]
+    return df.dropna().iloc[-1][['close', 'ema_12', 'ema_26', 'macd', 'signal', 'rsi']]
 
 def send_telegram(message):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
