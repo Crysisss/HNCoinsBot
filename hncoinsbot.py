@@ -15,11 +15,15 @@ def get_klines(symbol="BTCUSDT", interval="1m", limit=100):
         'close_time', 'quote_asset_volume', 'trades',
         'taker_buy_base', 'taker_buy_quote', 'ignore'
     ])
-    df['close'] = pd.to_numeric(df['close'], errors='coerce')
+    # Chuyển tất cả các cột liên quan sang float
+    for col in ['open', 'high', 'low', 'close', 'volume']:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
     df = df.dropna(subset=['close'])
     return df
 
 def analyze(df):
+    df = df.copy()
+    # Đảm bảo mọi thứ là numeric
     df['close'] = pd.to_numeric(df['close'], errors='coerce')
     df = df.dropna(subset=['close'])
 
@@ -38,10 +42,11 @@ def analyze(df):
     avg_gain = gain.rolling(window=14).mean()
     avg_loss = loss.rolling(window=14).mean()
     rs = avg_gain / avg_loss
-
     df['rsi'] = 100 - (100 / (1 + rs))
 
-    return df.dropna().iloc[-1][['close', 'ema_12', 'ema_26', 'macd', 'signal', 'rsi']]
+    df = df.dropna(subset=['ema_12', 'ema_26', 'macd', 'signal', 'rsi'])
+
+    return df.iloc[-1][['close', 'ema_12', 'ema_26', 'macd', 'signal', 'rsi']]
 
 def send_telegram(message):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
